@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,23 +11,19 @@ import {
 import { ListDetailScreenProps } from '@/types/navigation';
 import { useLists } from '@/hooks/useLists';
 import { CategorySection } from '@/components/CategorySection';
+import { InputModal } from '@/components/InputModal';
 import { colors } from '@/constants';
 
 export const ListDetailScreen = ({ route }: ListDetailScreenProps) => {
   const { listId, listName } = route.params;
   const { lists, addCategory, deleteCategory, addItem, updateItem, deleteItem } = useLists();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const list = lists.find((l) => l.id === listId);
 
-  const handleAddCategory = () => {
-    Alert.prompt(
-      'Nueva sección',
-      `Añadir sección a "${listName}"`,
-      (name) => {
-        if (name?.trim()) addCategory(listId, name.trim());
-      },
-      'plain-text'
-    );
+  const handleAddCategory = (name: string) => {
+    addCategory(listId, name);
+    setModalVisible(false);
   };
 
   if (!list) {
@@ -53,7 +49,20 @@ export const ListDetailScreen = ({ route }: ListDetailScreenProps) => {
                 updateItem(listId, category.id, itemId, { completed })
               }
               onDeleteItem={(itemId) => deleteItem(listId, category.id, itemId)}
-              onDeleteCategory={() => deleteCategory(listId, category.id)}
+              onDeleteCategory={() =>
+                Alert.alert(
+                  'Eliminar sección',
+                  `¿Eliminar "${category.name}" y todos sus ítems?`,
+                  [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                      text: 'Eliminar',
+                      style: 'destructive',
+                      onPress: () => deleteCategory(listId, category.id),
+                    },
+                  ]
+                )
+              }
             />
           )}
           ListEmptyComponent={
@@ -64,10 +73,18 @@ export const ListDetailScreen = ({ route }: ListDetailScreenProps) => {
           }
           contentContainerStyle={styles.list}
         />
-        <TouchableOpacity style={styles.fab} onPress={handleAddCategory}>
+        <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
           <Text style={styles.fabText}>＋</Text>
         </TouchableOpacity>
       </View>
+
+      <InputModal
+        visible={modalVisible}
+        title="Nueva sección"
+        placeholder={`Ej: Lácteos, Congelados...`}
+        onConfirm={handleAddCategory}
+        onCancel={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 };

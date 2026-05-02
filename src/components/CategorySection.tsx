@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Category } from '@/types';
 import { colors } from '@/constants';
 import { ItemRow } from './ItemRow';
+import { InputModal } from './InputModal';
 
 interface Props {
   category: Category;
@@ -21,27 +22,11 @@ export const CategorySection = ({
   onDeleteCategory,
 }: Props) => {
   const [expanded, setExpanded] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const handleAddItem = () => {
-    Alert.prompt(
-      'Nuevo ítem',
-      `Añadir a "${category.name}"`,
-      (text) => {
-        if (text?.trim()) onAddItem(text.trim());
-      },
-      'plain-text'
-    );
-  };
-
-  const handleDeleteCategory = () => {
-    Alert.alert(
-      'Eliminar sección',
-      `¿Eliminar "${category.name}" y todos sus ítems?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: onDeleteCategory },
-      ]
-    );
+  const handleAddItem = (text: string) => {
+    onAddItem(text);
+    setModalVisible(false);
   };
 
   return (
@@ -49,12 +34,21 @@ export const CategorySection = ({
       <TouchableOpacity
         style={styles.header}
         onPress={() => setExpanded((v) => !v)}
-        onLongPress={handleDeleteCategory}
+        onLongPress={() =>
+          Alert.alert(
+            'Opciones',
+            category.name,
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              { text: 'Eliminar sección', style: 'destructive', onPress: onDeleteCategory },
+            ]
+          )
+        }
       >
         <Text style={styles.arrow}>{expanded ? '▾' : '▸'}</Text>
         <Text style={styles.title}>{category.name}</Text>
         <Text style={styles.count}>{category.items.length}</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={handleAddItem}>
+        <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
           <Text style={styles.addBtnText}>＋</Text>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -79,6 +73,14 @@ export const CategorySection = ({
           )}
         </View>
       )}
+
+      <InputModal
+        visible={modalVisible}
+        title={`Añadir a "${category.name}"`}
+        placeholder="Nombre del ítem"
+        onConfirm={handleAddItem}
+        onCancel={() => setModalVisible(false)}
+      />
     </View>
   );
 };

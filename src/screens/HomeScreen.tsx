@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,20 +11,16 @@ import {
 import { HomeScreenProps } from '@/types/navigation';
 import { useLists } from '@/hooks/useLists';
 import { ListCard } from '@/components/ListCard';
+import { InputModal } from '@/components/InputModal';
 import { colors } from '@/constants';
 
 export const HomeScreen = ({ navigation }: HomeScreenProps) => {
   const { lists, loading, createList, deleteList } = useLists();
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const handleCreate = () => {
-    Alert.prompt(
-      'Nueva lista',
-      'Escribe el nombre de la lista',
-      (name) => {
-        if (name?.trim()) createList(name.trim());
-      },
-      'plain-text'
-    );
+  const handleCreate = (name: string) => {
+    createList(name);
+    setModalVisible(false);
   };
 
   const handleDelete = (listId: string, listName: string) => {
@@ -66,10 +62,18 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
           }
           contentContainerStyle={styles.list}
         />
-        <TouchableOpacity style={styles.fab} onPress={handleCreate}>
+        <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
           <Text style={styles.fabText}>＋</Text>
         </TouchableOpacity>
       </View>
+
+      <InputModal
+        visible={modalVisible}
+        title="Nueva lista"
+        placeholder="Nombre de la lista"
+        onConfirm={handleCreate}
+        onCancel={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 };
